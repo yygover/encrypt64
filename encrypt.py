@@ -9,18 +9,18 @@ from ttkbootstrap.constants import *
 
 
 # フォルダ指定の関数
-def dirdialog_clicked(entry):
-    iDir = os.path.abspath(os.path.dirname(__file__))
-    iDirPath = filedialog.askdirectory(initialdir=iDir)
-    entry.set(iDirPath)
+def dir_dialog_clicked(entry):
+    i_dir = os.path.abspath(os.path.dirname(__file__))
+    i_dir_path = filedialog.askdirectory(initialdir=i_dir)
+    entry.set(i_dir_path)
 
 
 # ファイル指定の関数
 def filedialog_clicked(entry):
-    fTyp = [("", "*")]
-    iFile = os.path.abspath(os.path.dirname(__file__))
-    iFilePath = filedialog.askopenfilename(filetype=fTyp, initialdir=iFile)
-    entry.set(iFilePath)
+    f_typ = [("", "*")]
+    i_file = os.path.abspath(os.path.dirname(__file__))
+    i_file_path = filedialog.askopenfilename(filetype=f_typ, initialdir=i_file)
+    entry.set(i_file_path)
 
 
 def on_entry_change(*args):
@@ -29,37 +29,41 @@ def on_entry_change(*args):
 
 
 # 実行ボタン押下時の実行関数
-def conductMain():
-    dirPath = entry1.get()
-    filePath = entry2.get()
-    desPath = entry3.get()
-    if dirPath:
-        getfile = os.listdir(dirPath)
+def conduct_main():
+    dir_path = entry1.get()
+    file_path = entry2.get()
+    des_path = entry3.get()
+    if dir_path:
+        getfile = os.listdir(dir_path)
         if not getfile:
             messagebox.showerror("error", "没有文件")
         else:
             k = 0
             count = 0
             for path in getfile:
-                if os.path.isfile(os.path.join(dirPath, path)):
+                if os.path.isfile(os.path.join(dir_path, path)):
                     count += 1
             for i in getfile:
-                pb['value'] = k / count * 100
-                encryptFile(i, dirPath, desPath)
+                encrypt_file(i, dir_path, des_path)
                 k += 1
-    if filePath:
-        encryptFile(os.path.basename(filePath), os.path.dirname(filePath), desPath)
+                pb['value'] = k / count * 100
+    if file_path:
+        encrypt_file(os.path.basename(file_path), os.path.dirname(file_path), des_path)
         pb['value'] = 100
 
 
-def encryptFile(file, path, des):
+def encrypt_file(file, path, des):
     text = ""
     if fileE:
-        ba = base64.b64encode(file.encode()).decode().strip().replace('\n', '').replace('\]', '').replace('/', '')
+        ba = base64.b64encode(file.encode()).decode().strip().replace('\n', '').replace('\\', '').replace('/', '')
     else:
         ba = file
+    if os.path.isfile(os.path.join(path, ba+'.zst')):
+        return 1
     temp = '''7za.exe a -m0=zstd -mx1 -mhe=on -pwoshiyy00 -aoa "''' + ba + '''.zst" "''' + path + '''/''' + file + '''"'''
     if des:
+        if os.path.isfile(os.path.join(des, ba + '.zst')):
+            return 1
         temp = '''7za.exe a -m0=zstd -mx1 -mhe=on -pwoshiyy00 -aoa "''' + des + '''/''' + ba + '''.zst" "''' + path + '''/''' + file + '''"'''
     process = subprocess.Popen(temp, shell=True, stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
     exitcode = process.wait()
@@ -68,33 +72,33 @@ def encryptFile(file, path, des):
             for line in iter(process.stdout.readline, b''):
                 if line.decode('cp936'):
                     text += line.decode('cp936')
-            messagebox.showinfo("warnning", text)
+            messagebox.showinfo("warning", text)
 
 
-def conductMain2():
-    dirPath = entry1.get()
-    filePath = entry2.get()
-    desPath = entry3.get()
-    if dirPath:
-        getfile = os.listdir(dirPath)
+def conduct_main2():
+    dir_path = entry1.get()
+    file_path = entry2.get()
+    des_path = entry3.get()
+    if dir_path:
+        getfile = os.listdir(dir_path)
         if not getfile:
             messagebox.showerror("error", "没有文件")
         else:
             k = 0
             count = 0
             for path in getfile:
-                if os.path.isfile(os.path.join(dirPath, path)):
+                if os.path.isfile(os.path.join(dir_path, path)):
                     count += 1
             for i in getfile:
-                pb['value'] = k / count * 100
-                decryptFile(i, dirPath, desPath)
+                decrypt_file(i, dir_path, des_path)
                 k += 1
-    if filePath:
-        decryptFile(os.path.basename(filePath), os.path.dirname(filePath), desPath)
+                pb['value'] = k / count * 100
+    if file_path:
+        decrypt_file(os.path.basename(file_path), os.path.dirname(file_path), des_path)
         pb['value'] = 100
 
 
-def decryptFile(file, path, des):
+def decrypt_file(file, path, des):
     text = ""
     temp = '''7za.exe x -pwoshiyy00 -aoa "''' + path + '''/''' + file + '''"'''
     if des:
@@ -106,7 +110,7 @@ def decryptFile(file, path, des):
             for line in iter(process.stdout.readline, b''):
                 if line.decode('cp936'):
                     text += line.decode('cp936')
-            messagebox.showinfo("warnning", text)
+            messagebox.showinfo("warning", text)
 
 
 if __name__ == "__main__":
@@ -133,7 +137,7 @@ if __name__ == "__main__":
     IDirEntry = ttk.Entry(frame1, textvariable=entry1, width=60)
     IDirEntry.pack(side=LEFT)
 
-    IDirButton = ttk.Button(frame1, text="浏览", command=lambda: dirdialog_clicked(entry1))
+    IDirButton = ttk.Button(frame1, text="浏览", command=lambda: dir_dialog_clicked(entry1))
     IDirButton.pack(side=LEFT)
 
     frame2 = ttk.Frame(root, padding=10)
@@ -159,7 +163,7 @@ if __name__ == "__main__":
     TDirEntry = ttk.Entry(frame3, textvariable=entry3, width=60)
     TDirEntry.pack(side=LEFT)
 
-    TDirButton = ttk.Button(frame3, text="浏览", command=lambda: dirdialog_clicked(entry3))
+    TDirButton = ttk.Button(frame3, text="浏览", command=lambda: dir_dialog_clicked(entry3))
     TDirButton.pack(side=LEFT)
 
     frame4 = ttk.Frame(root, padding=10)
@@ -173,9 +177,9 @@ if __name__ == "__main__":
     frame5 = ttk.Frame(root, padding=10)
     frame5.grid(row=9, column=1)
 
-    button1 = ttk.Button(frame5, text="加密", command=conductMain)
+    button1 = ttk.Button(frame5, text="加密", command=conduct_main)
     button1.pack(side=LEFT, padx=10)
-    button2 = ttk.Button(frame5, text="解密", command=conductMain2)
+    button2 = ttk.Button(frame5, text="解密", command=conduct_main2)
     button2.pack(side=LEFT, padx=10)
 
     frame6 = ttk.Frame(root, padding=10)
